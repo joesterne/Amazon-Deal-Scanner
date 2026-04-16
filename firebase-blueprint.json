@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and affiliate settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "description": "User email address" },
+        "affiliateId": { "type": "string", "description": "Amazon Affiliate Associate ID" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "TrackedItem": {
+      "title": "Tracked Item",
+      "description": "Amazon item being monitored for price drops",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amazonId": { "type": "string", "description": "ASIN or unique Amazon identifier" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "targetPrice": { "type": "number" },
+        "currentPrice": { "type": "number" },
+        "marketplace": { "type": "string", "enum": ["US", "UK", "CA", "DE", "FR", "ES", "IT"] },
+        "url": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amazonId", "targetPrice"]
+    },
+    "PublicDeal": {
+      "title": "Public Deal",
+      "description": "A deal found by a user to be listed publicly with their affiliate link",
+      "type": "object",
+      "properties": {
+        "finderUserId": { "type": "string" },
+        "title": { "type": "string" },
+        "originalPrice": { "type": "number" },
+        "discountedPrice": { "type": "number" },
+        "discountPercentage": { "type": "number" },
+        "marketplace": { "type": "string" },
+        "url": { "type": "string" },
+        "affiliateUrl": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["finderUserId", "title", "discountedPrice", "url"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/tracked_items/{itemId}": {
+      "schema": "TrackedItem",
+      "description": "Items being tracked for price drops"
+    },
+    "/public_deals/{dealId}": {
+      "schema": "PublicDeal",
+      "description": "Deals shared publicly"
+    }
+  }
+}
