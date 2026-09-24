@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ShoppingBag, Search, Bell, Globe, User, Share2 } from 'lucide-react';
+import { ShoppingBag, Search, Bell, Globe, User, Share2, TrendingDown } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +12,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const tabs = [
     { id: 'scanner', label: 'Scan Deals', icon: Search },
     { id: 'tracker', label: 'Price Tracker', icon: Bell },
+    { id: 'analytics', label: 'Price Analytics', icon: TrendingDown },
     { id: 'comparison', label: 'Compare', icon: Globe },
     { id: 'listing', label: 'Public Deals', icon: Share2 },
     { id: 'profile', label: 'Profile', icon: User },

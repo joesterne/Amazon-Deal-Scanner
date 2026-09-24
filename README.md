@@ -46,6 +46,11 @@ The application has been extensively refactored for ultra-low latency, instant t
 
 - **Deal Scanner (`Deal_Scanner.v2`)**: Scan Amazon marketplaces (US, UK, CA, DE, FR) for deep discounts by keyword, ASIN, or category with minimum discount thresholds.
 - **Price Tracker & Email Alerts (`Price_Watch.v2`)**: Monitor ASINs, set target prices, and configure automated transactional email notifications on price drops.
+- **Price Analytics & Savings Visualizer (`Price_Analytics.v3`)**: Interactive data visualization powered by **Recharts** displaying:
+  - Multi-line historical price trajectories vs user-defined target thresholds and baseline prices.
+  - Cumulative savings progression curve with area gradients.
+  - Per-asset savings breakdown (vertical bar chart with dollar & discount metrics).
+  - Configurable time horizons (7D, 14D, 30D, 90D, ALL) and individual asset focus or portfolio aggregate views.
 - **Market Comparison (`Market_Index.v4`)**: Compare real-time live pricing for any product across 5 global Amazon locales with interactive ascending/descending sorting.
 - **Community Matrix (`Community_Matrix.v2`)**: Live curated deal feed with flexible real-time sorting by:
   - Date Posted (Newest First)

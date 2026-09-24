@@ -5,6 +5,13 @@ export interface UserProfile {
   createdAt: any;
 }
 
+export interface PriceHistoryRecord {
+  date: string;
+  price: number;
+  targetPrice?: number;
+  timestamp?: number;
+}
+
 export interface TrackedItem {
   id?: string;
   userId: string;
@@ -13,12 +20,14 @@ export interface TrackedItem {
   imageUrl: string;
   targetPrice: number;
   currentPrice: number;
+  originalPrice?: number;
   marketplace: string;
   url: string;
   createdAt: any;
   emailAlertEnabled?: boolean;
   alertEmail?: string;
   lastAlertSentAt?: any;
+  priceHistory?: PriceHistoryRecord[];
 }
 
 export interface PublicDeal {

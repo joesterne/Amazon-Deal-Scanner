@@ -4,6 +4,7 @@ import { Bell, Trash2, TrendingDown, Info, ShoppingCart, Plus, Loader2, Mail, Ma
 import { db, auth, onSnapshot, collection, query, where, orderBy, deleteDoc, doc, updateDoc, handleFirestoreError, OperationType } from '../firebase';
 import { TrackedItem } from '../types';
 import { generateAffiliateLink } from '../lib/affiliate';
+import { PriceAnalytics } from './PriceAnalytics';
 
 interface PriceTrackerProps {
   affiliateId?: string;
@@ -13,6 +14,7 @@ export const PriceTracker: React.FC<PriceTrackerProps> = ({ affiliateId }) => {
   const [items, setItems] = useState<TrackedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [trackerTab, setTrackerTab] = useState<'items' | 'analytics'>('items');
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -93,22 +95,43 @@ export const PriceTracker: React.FC<PriceTrackerProps> = ({ affiliateId }) => {
 
   return (
     <div className="space-y-8">
-      <header className="border-b-2 border-ink pb-4 flex justify-between items-end">
+      <header className="border-b-2 border-ink pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tighter italic font-serif">Price_Watch.v1</h2>
+          <h2 className="text-2xl font-black uppercase tracking-tighter italic font-serif">Price_Watch.v2</h2>
           <p className="text-muted text-xs font-bold font-mono">MONITORING_ACTIVE // COMPARING_LOCAL_VS_CURRENT...</p>
         </div>
-        <button 
-          onClick={triggerManualSync}
-          disabled={syncing}
-          className="bg-bg border border-line px-4 h-9 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-[#F0F0EE] transition-all disabled:opacity-50"
-        >
-          {syncing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-          SYNC_NODES
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="pill-list border border-line bg-[#F8F8F7] p-1 rounded-xs flex">
+            <button
+              onClick={() => setTrackerTab('items')}
+              className={`pill text-[10px] font-mono uppercase px-3 py-1 font-bold ${trackerTab === 'items' ? 'active' : ''}`}
+            >
+              Tracked Items ({items.length})
+            </button>
+            <button
+              onClick={() => setTrackerTab('analytics')}
+              className={`pill text-[10px] font-mono uppercase px-3 py-1 font-bold flex items-center gap-1.5 ${trackerTab === 'analytics' ? 'active' : ''}`}
+            >
+              <TrendingDown className="w-3 h-3" />
+              Price History & Savings
+            </button>
+          </div>
+          <button 
+            onClick={triggerManualSync}
+            disabled={syncing}
+            className="bg-bg border border-line px-4 h-9 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-[#F0F0EE] transition-all disabled:opacity-50"
+          >
+            {syncing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+            SYNC_NODES
+          </button>
+        </div>
       </header>
 
-      {items.length > 0 ? (
+      {trackerTab === 'analytics' ? (
+        <PriceAnalytics affiliateId={affiliateId} items={items} />
+      ) : (
+        <>
+          {items.length > 0 ? (
         <div className="border border-line overflow-hidden">
           {/* Table Header */}
           <div className="hidden md:grid grid-cols-[80px_1fr_100px_100px_100px_80px_100px] bg-[#F0F0EE] border-b border-line font-serif italic text-[10px] text-muted p-3">
@@ -174,6 +197,8 @@ export const PriceTracker: React.FC<PriceTrackerProps> = ({ affiliateId }) => {
           <Bell className="w-10 h-10 text-muted mx-auto mb-4 opacity-20" />
           <p className="font-mono text-xs text-muted font-bold tracking-widest uppercase">ACTIVE_ALERTS_NODE: 0000 // IDLE</p>
         </div>
+      )}
+        </>
       )}
 
       {/* Info Panel */}

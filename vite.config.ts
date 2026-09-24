@@ -26,6 +26,7 @@ export default defineConfig(({mode}) => {
             'vendor-motion': ['motion/react'],
             'vendor-genai': ['@google/genai'],
             'vendor-icons': ['lucide-react'],
+            'vendor-charts': ['recharts'],
           },
         },
       },

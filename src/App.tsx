@@ -11,6 +11,7 @@ import { Scanner } from './components/Scanner';
 
 // Dynamic code-splitting for high-speed initial bundle payload
 const PriceTracker = lazy(() => import('./components/PriceTracker').then(m => ({ default: m.PriceTracker })));
+const PriceAnalytics = lazy(() => import('./components/PriceAnalytics').then(m => ({ default: m.PriceAnalytics })));
 const PriceComparison = lazy(() => import('./components/PriceComparison').then(m => ({ default: m.PriceComparison })));
 const PublicDeals = lazy(() => import('./components/PublicDeals').then(m => ({ default: m.PublicDeals })));
 const Profile = lazy(() => import('./components/Profile').then(m => ({ default: m.Profile })));
@@ -66,6 +67,12 @@ export default function App() {
         return (
           <Suspense fallback={<TabSuspenseFallback />}>
             <PriceTracker affiliateId={userProfile?.affiliateId} />
+          </Suspense>
+        );
+      case 'analytics':
+        return (
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <PriceAnalytics affiliateId={userProfile?.affiliateId} onNavigateToScanner={() => setActiveTab('scanner')} />
           </Suspense>
         );
       case 'comparison':
