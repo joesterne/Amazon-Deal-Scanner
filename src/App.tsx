@@ -3,15 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { auth, db, getDoc, doc, onAuthStateChanged, handleFirestoreError, OperationType } from './firebase';
 import { UserProfile } from './types';
 import { Layout } from './components/Layout';
 import { Scanner } from './components/Scanner';
-import { PriceTracker } from './components/PriceTracker';
-import { PriceComparison } from './components/PriceComparison';
-import { PublicDeals } from './components/PublicDeals';
-import { Profile } from './components/Profile';
+
+// Dynamic code-splitting for high-speed initial bundle payload
+const PriceTracker = lazy(() => import('./components/PriceTracker').then(m => ({ default: m.PriceTracker })));
+const PriceComparison = lazy(() => import('./components/PriceComparison').then(m => ({ default: m.PriceComparison })));
+const PublicDeals = lazy(() => import('./components/PublicDeals').then(m => ({ default: m.PublicDeals })));
+const Profile = lazy(() => import('./components/Profile').then(m => ({ default: m.Profile })));
+
+const TabSuspenseFallback = () => (
+  <div className="py-20 flex flex-col items-center justify-center gap-3">
+    <div className="w-8 h-8 border-2 border-ink border-t-accent animate-spin" />
+    <span className="font-mono text-[10px] text-muted font-bold tracking-widest uppercase">
+      STREAMING_MODULE...
+    </span>
+  </div>
+);
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('scanner');
@@ -52,13 +63,29 @@ export default function App() {
       case 'scanner':
         return <Scanner affiliateId={userProfile?.affiliateId} />;
       case 'tracker':
-        return <PriceTracker affiliateId={userProfile?.affiliateId} />;
+        return (
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <PriceTracker affiliateId={userProfile?.affiliateId} />
+          </Suspense>
+        );
       case 'comparison':
-        return <PriceComparison affiliateId={userProfile?.affiliateId} />;
+        return (
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <PriceComparison affiliateId={userProfile?.affiliateId} />
+          </Suspense>
+        );
       case 'listing':
-        return <PublicDeals />;
+        return (
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <PublicDeals />
+          </Suspense>
+        );
       case 'profile':
-        return <Profile userProfile={userProfile} onRefresh={() => auth.currentUser && fetchUserProfile(auth.currentUser.uid)} />;
+        return (
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <Profile userProfile={userProfile} onRefresh={() => auth.currentUser && fetchUserProfile(auth.currentUser.uid)} />
+          </Suspense>
+        );
       default:
         return <Scanner affiliateId={userProfile?.affiliateId} />;
     }
@@ -81,4 +108,3 @@ export default function App() {
     </Layout>
   );
 }
-

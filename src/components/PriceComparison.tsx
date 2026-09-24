@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Globe, Search, Loader2, ExternalLink, ChevronDown } from 'lucide-react';
 import { comparePrices } from '../services/geminiService';
@@ -27,9 +27,11 @@ export const PriceComparison: React.FC<PriceComparisonProps> = ({ affiliateId })
     setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
   };
 
-  const sortedResults = [...results].sort((a, b) => {
-    return sortOrder === 'asc' ? a.price - b.price : b.price - a.price;
-  });
+  const sortedResults = useMemo(() => {
+    return [...results].sort((a, b) => {
+      return sortOrder === 'asc' ? a.price - b.price : b.price - a.price;
+    });
+  }, [results, sortOrder]);
 
   return (
     <div className="space-y-8">
