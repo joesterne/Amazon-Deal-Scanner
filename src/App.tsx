@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { auth, db, getDoc, doc, onAuthStateChanged, handleFirestoreError, OperationType } from './firebase';
 import { UserProfile } from './types';
 import { Layout } from './components/Layout';
@@ -84,7 +84,7 @@ export default function App() {
       case 'listing':
         return (
           <Suspense fallback={<TabSuspenseFallback />}>
-            <PublicDeals />
+            <PublicDeals affiliateId={userProfile?.affiliateId} />
           </Suspense>
         );
       case 'profile':

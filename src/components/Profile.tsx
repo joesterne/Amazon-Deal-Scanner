@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, LogOut, Save, BadgeCheck, ShieldCheck } from 'lucide-react';
+import { LogOut, Save, BadgeCheck, ShieldCheck } from 'lucide-react';
 import { auth, db, logout, signInWithGoogle, getDoc, setDoc, doc, Timestamp, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile } from '../types';
 
@@ -32,8 +32,9 @@ export const Profile: React.FC<ProfileProps> = ({ userProfile, onRefresh }) => {
       alert('Settings saved!');
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (!auth.currentUser) {

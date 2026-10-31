@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, Timestamp, addDoc } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -57,7 +57,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   }
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Deliberately does NOT throw: most callers use this as a log-and-continue
+  // helper inside catch blocks and onSnapshot error callbacks, and the throw
+  // turned handled errors into unhandled rejections (and, in Profile, left the
+  // Save button stuck on "SAVING..." because the finally-path never ran).
 }
 
 // Auth Helpers

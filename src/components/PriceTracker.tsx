@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Trash2, TrendingDown, Info, ShoppingCart, Plus, Loader2, Mail, MailWarning, Settings2, RefreshCw } from 'lucide-react';
-import { db, auth, onSnapshot, collection, query, where, orderBy, deleteDoc, doc, updateDoc, handleFirestoreError, OperationType } from '../firebase';
+import { Bell, TrendingDown, Info, ShoppingCart, Loader2, Mail, RefreshCw } from 'lucide-react';
+import { db, auth, onSnapshot, onAuthStateChanged, collection, query, where, orderBy, deleteDoc, doc, updateDoc, handleFirestoreError, OperationType } from '../firebase';
 import { TrackedItem } from '../types';
 import { generateAffiliateLink } from '../lib/affiliate';
 import { PriceAnalytics } from './PriceAnalytics';
@@ -17,27 +16,43 @@ export const PriceTracker: React.FC<PriceTrackerProps> = ({ affiliateId }) => {
   const [trackerTab, setTrackerTab] = useState<'items' | 'analytics'>('items');
 
   useEffect(() => {
-    if (!auth.currentUser) return;
+    // Keyed on auth state: the old version read auth.currentUser once and
+    // returned early when signed out, leaving the loading spinner up forever
+    // (and never reacting when sign-in completed).
+    let unsubscribeSnapshot: (() => void) | undefined;
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      unsubscribeSnapshot?.();
+      unsubscribeSnapshot = undefined;
+      if (!user) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
 
-    const q = query(
-      collection(db, 'tracked_items'),
-      where('userId', '==', auth.currentUser.uid),
-      orderBy('createdAt', 'desc')
-    );
+      setLoading(true);
+      const q = query(
+        collection(db, 'tracked_items'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const results: TrackedItem[] = [];
-      snapshot.forEach((doc) => {
-        results.push({ id: doc.id, ...doc.data() } as TrackedItem);
+      unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+        const results: TrackedItem[] = [];
+        snapshot.forEach((doc) => {
+          results.push({ id: doc.id, ...doc.data() } as TrackedItem);
+        });
+        setItems(results);
+        setLoading(false);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, 'tracked_items');
+        setLoading(false);
       });
-      setItems(results);
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'tracked_items');
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeSnapshot?.();
+      unsubscribeAuth();
+    };
   }, []);
 
   const toggleEmailAlert = async (item: TrackedItem) => {
@@ -54,13 +69,20 @@ export const PriceTracker: React.FC<PriceTrackerProps> = ({ affiliateId }) => {
 
   const triggerManualSync = async () => {
     setSyncing(true);
+    let dispatched = 0;
+    let failed = 0;
+    // The alerts endpoint requires the caller's Firebase ID token.
+    const idToken = auth.currentUser ? await auth.currentUser.getIdToken().catch(() => null) : null;
     // Simulate checking prices and sending alerts
     for (const item of items) {
       if (item.currentPrice <= item.targetPrice && item.emailAlertEnabled && item.id) {
         try {
-          await fetch('/api/alerts/send', {
+          const res = await fetch('/api/alerts/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+            },
             body: JSON.stringify({
               email: item.alertEmail || auth.currentUser?.email,
               itemTitle: item.title,
@@ -69,14 +91,25 @@ export const PriceTracker: React.FC<PriceTrackerProps> = ({ affiliateId }) => {
               url: item.url
             })
           });
-          console.log(`Alert sent for ${item.title}`);
+          // Previously the response was never checked and success was announced
+          // even when the server failed (e.g. RESEND_API_KEY unset).
+          if (res.ok) {
+            dispatched++;
+            console.log(`Alert sent for ${item.title}`);
+          } else {
+            failed++;
+            console.error(`Alert failed for ${item.title}: HTTP ${res.status}`);
+          }
         } catch (error) {
+          failed++;
           console.error('Failed to send email alert', error);
         }
       }
     }
     setSyncing(false);
-    alert('Synchronization complete. Dispatched alerts for active price drops.');
+    alert(failed > 0
+      ? `Synchronization complete. ${dispatched} alert(s) dispatched, ${failed} failed — see console for details.`
+      : `Synchronization complete. Dispatched ${dispatched} alert(s) for active price drops.`);
   };
 
   const stopTracking = async (id: string) => {

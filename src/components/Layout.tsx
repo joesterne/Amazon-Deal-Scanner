@@ -44,7 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       <div className="flex pt-[60px] min-h-screen">
         {/* Sidebar */}
-        <aside className="w-[200px] md:w-[240px] bg-[#F8F8F7] border-r border-line fixed top-[60px] bottom-0 overflow-y-auto p-5 space-y-8">
+        <aside className="w-[60px] md:w-[240px] bg-[#F8F8F7] border-r border-line fixed top-[60px] bottom-0 overflow-y-auto p-5 space-y-8">
           <div>
             <div className="font-serif italic text-xs text-muted uppercase mb-4 tracking-wider">Navigation</div>
             <ul className="space-y-1">
@@ -81,7 +81,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </aside>
 
         {/* Main Content */}
-        <main className="ml-[200px] md:ml-[240px] flex-1 min-w-0 bg-white">
+        <main className="ml-[60px] md:ml-[240px] flex-1 min-w-0 bg-white">
           <div className="min-h-full">
             <motion.div
               key={activeTab}

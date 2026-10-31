@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Search, Loader2, Tag, ExternalLink, Share2, Plus, Globe } from 'lucide-react';
+import { Loader2, ExternalLink, Share2, Plus } from 'lucide-react';
 import { scanAmazonDeals } from '../services/geminiService';
 import { AmazonItem, PublicDeal, TrackedItem } from '../types';
-import { db, auth, handleFirestoreError, OperationType, setDoc, doc, Timestamp, collection, addDoc } from '../firebase';
+import { db, auth, handleFirestoreError, OperationType, Timestamp, collection, addDoc } from '../firebase';
 import { generateAffiliateLink } from '../lib/affiliate';
 
 interface ScannerProps {
@@ -98,7 +97,7 @@ export const Scanner: React.FC<ScannerProps> = ({ affiliateId }) => {
               type="number"
               className="w-full h-10 px-4 bg-white border border-line rounded-xs focus:border-ink outline-none font-mono text-xs"
               value={minDiscount}
-              onChange={(e) => setMinDiscount(parseInt(e.target.value))}
+              onChange={(e) => setMinDiscount(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
             />
           </div>
           <div className="space-y-2">

@@ -12,18 +12,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  ReferenceLine
+  Legend
 } from 'recharts';
 import {
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  Layers,
-  Sparkles,
-  ArrowUpRight,
-  Filter,
-  ShoppingCart,
   AlertCircle,
   ExternalLink,
   Tag
@@ -31,6 +22,10 @@ import {
 import { TrackedItem } from '../types';
 import { generateAffiliateLink } from '../lib/affiliate';
 import { db, auth, onSnapshot, collection, query, where, orderBy, handleFirestoreError, OperationType } from '../firebase';
+
+// The 1.35 markup assumption for items without a recorded original price was
+// copy-pasted in four places; one helper so chart/KPI math can't drift apart.
+const baselinePrice = (item: TrackedItem) => item.originalPrice || (item.currentPrice * 1.35);
 
 interface PriceAnalyticsProps {
   affiliateId?: string;
@@ -163,7 +158,8 @@ export const PriceAnalytics: React.FC<PriceAnalyticsProps> = ({
       case '14D': return 14;
       case '30D': return 30;
       case '90D': return 90;
-      case 'ALL': default: return 60;
+      // Was 60 — "ALL" showed a shorter window than the 90D option.
+      case 'ALL': default: return 3650;
     }
   }, [timeHorizon]);
 
@@ -187,7 +183,7 @@ export const PriceAnalytics: React.FC<PriceAnalyticsProps> = ({
 
       if (selectedItem) {
         // Single item trajectory
-        const original = selectedItem.originalPrice || (selectedItem.currentPrice * 1.35);
+        const original = baselinePrice(selectedItem);
         const target = selectedItem.targetPrice;
         const current = selectedItem.currentPrice;
 
@@ -219,7 +215,7 @@ export const PriceAnalytics: React.FC<PriceAnalyticsProps> = ({
         let totalSavings = 0;
 
         activeItems.forEach((item, itemIdx) => {
-          const original = item.originalPrice || (item.currentPrice * 1.35);
+          const original = baselinePrice(item);
           const target = item.targetPrice;
           const current = item.currentPrice;
 
@@ -258,7 +254,7 @@ export const PriceAnalytics: React.FC<PriceAnalyticsProps> = ({
   // Savings by Item breakdown for Bar chart
   const itemSavingsBreakdown = useMemo(() => {
     return activeItems.map((item) => {
-      const original = item.originalPrice || (item.currentPrice * 1.35);
+      const original = baselinePrice(item);
       const savings = Math.max(0, original - item.currentPrice);
       const discountPct = Math.round((savings / original) * 100);
       return {
@@ -277,7 +273,7 @@ export const PriceAnalytics: React.FC<PriceAnalyticsProps> = ({
   // High-level KPI metrics
   const kpis = useMemo(() => {
     const totalCurrentVal = activeItems.reduce((acc, i) => acc + (i.currentPrice || 0), 0);
-    const totalBaselineVal = activeItems.reduce((acc, i) => acc + (i.originalPrice || (i.currentPrice * 1.35)), 0);
+    const totalBaselineVal = activeItems.reduce((acc, i) => acc + baselinePrice(i), 0);
     const totalTargetVal = activeItems.reduce((acc, i) => acc + (i.targetPrice || 0), 0);
     const realizedSavings = Math.max(0, totalBaselineVal - totalCurrentVal);
     const savingsPercentage = totalBaselineVal > 0 ? Math.round((realizedSavings / totalBaselineVal) * 100) : 0;
